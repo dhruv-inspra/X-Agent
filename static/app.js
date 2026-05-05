@@ -20,6 +20,7 @@ let source;
 let isRecording = false;
 let playbackCursor = 0;
 let activeAgentMessage;
+let playbackNodes = [];
 
 function setStatus(text, mode = "") {
   statusEl.textContent = text;
@@ -112,6 +113,10 @@ function playPcmDelta(base64Audio) {
   const node = playbackContext.createBufferSource();
   node.buffer = audioBuffer;
   node.connect(playbackContext.destination);
+  playbackNodes.push(node);
+  node.onended = () => {
+    playbackNodes = playbackNodes.filter((queuedNode) => queuedNode !== node);
+  };
 
   const startAt = Math.max(playbackContext.currentTime, playbackCursor);
   node.start(startAt);
@@ -343,6 +348,21 @@ function stopSession(closeSocket = true) {
     socket.close();
   }
   socket = null;
+  playbackNodes.forEach((node) => {
+    try {
+      node.stop();
+    } catch (error) {
+      // Already stopped or not started.
+    }
+    node.disconnect();
+  });
+  playbackNodes = [];
+  playbackCursor = 0;
+  if (playbackContext) {
+    playbackContext.close();
+    playbackContext = null;
+  }
+  finalizeAgentMessage();
   if (!statusEl.classList.contains("error")) {
     setStatus("Idle");
   }
