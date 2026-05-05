@@ -35,6 +35,7 @@ async def config() -> dict:
     return {
         "model": os.getenv("XAI_VOICE_MODEL", "grok-voice-think-fast-1.0"),
         "voice": os.getenv("XAI_VOICE", "rex"),
+        "playbackSpeed": float(os.getenv("XAI_PLAYBACK_SPEED", "1.12")),
         "sampleRate": 24000,
     }
 
@@ -83,6 +84,7 @@ async def session() -> dict:
         "token": token,
         "model": os.getenv("XAI_VOICE_MODEL", "grok-voice-think-fast-1.0"),
         "voice": os.getenv("XAI_VOICE", "rex"),
+        "playbackSpeed": float(os.getenv("XAI_PLAYBACK_SPEED", "1.12")),
         "instructions": load_prompt(),
         "sampleRate": 24000,
     }

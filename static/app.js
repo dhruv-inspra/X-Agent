@@ -21,6 +21,7 @@ let isRecording = false;
 let playbackCursor = 0;
 let activeAgentMessage;
 let playbackNodes = [];
+let playbackSpeed = 1.12;
 
 function setStatus(text, mode = "") {
   statusEl.textContent = text;
@@ -112,6 +113,7 @@ function playPcmDelta(base64Audio) {
 
   const node = playbackContext.createBufferSource();
   node.buffer = audioBuffer;
+  node.playbackRate.value = playbackSpeed;
   node.connect(playbackContext.destination);
   playbackNodes.push(node);
   node.onended = () => {
@@ -120,7 +122,7 @@ function playPcmDelta(base64Audio) {
 
   const startAt = Math.max(playbackContext.currentTime, playbackCursor);
   node.start(startAt);
-  playbackCursor = startAt + audioBuffer.duration;
+  playbackCursor = startAt + (audioBuffer.duration / playbackSpeed);
 }
 
 async function loadConfig() {
@@ -128,6 +130,7 @@ async function loadConfig() {
   const config = await response.json();
   modelName.textContent = config.model;
   voiceName.textContent = config.voice;
+  playbackSpeed = Number(config.playbackSpeed || 1.12);
 }
 
 async function createSession() {
@@ -305,6 +308,7 @@ async function startSession() {
     const session = await createSession();
     voiceName.textContent = session.voice;
     modelName.textContent = session.model;
+    playbackSpeed = Number(session.playbackSpeed || 1.12);
     connectRealtime(session);
     await startMicrophone();
 
