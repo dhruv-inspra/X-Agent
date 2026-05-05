@@ -18,11 +18,13 @@ load_dotenv(BASE_DIR / ".env")
 app = FastAPI(title="xAI Voice Agent Console")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+PROMPT_TEXT = PROMPT_PATH.read_text(encoding="utf-8").strip() if PROMPT_PATH.exists() else None
+
 
 def load_prompt() -> str:
-    if not PROMPT_PATH.exists():
+    if PROMPT_TEXT is None:
         raise HTTPException(status_code=500, detail="Prompt.md was not found.")
-    return PROMPT_PATH.read_text(encoding="utf-8").strip()
+    return PROMPT_TEXT
 
 
 @app.get("/")
@@ -35,7 +37,7 @@ async def config() -> dict:
     return {
         "model": os.getenv("XAI_VOICE_MODEL", "grok-voice-think-fast-1.0"),
         "voice": os.getenv("XAI_VOICE", "rex"),
-        "playbackSpeed": float(os.getenv("XAI_PLAYBACK_SPEED", "1.12")),
+        "playbackSpeed": float(os.getenv("XAI_PLAYBACK_SPEED", "1.0")),
         "sampleRate": 24000,
     }
 
@@ -84,7 +86,7 @@ async def session() -> dict:
         "token": token,
         "model": os.getenv("XAI_VOICE_MODEL", "grok-voice-think-fast-1.0"),
         "voice": os.getenv("XAI_VOICE", "rex"),
-        "playbackSpeed": float(os.getenv("XAI_PLAYBACK_SPEED", "1.12")),
+        "playbackSpeed": float(os.getenv("XAI_PLAYBACK_SPEED", "1.0")),
         "instructions": load_prompt(),
         "sampleRate": 24000,
     }

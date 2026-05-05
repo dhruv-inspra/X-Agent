@@ -15,13 +15,13 @@ let socket;
 let mediaStream;
 let captureContext;
 let playbackContext;
-let processor;
 let source;
 let isRecording = false;
 let playbackCursor = 0;
 let activeAgentMessage;
 let playbackNodes = [];
-let playbackSpeed = 1.12;
+let playbackSpeed = 1.0;
+let workletNode;
 
 function setStatus(text, mode = "") {
   statusEl.textContent = text;
@@ -130,7 +130,7 @@ async function loadConfig() {
   const config = await response.json();
   modelName.textContent = config.model;
   voiceName.textContent = config.voice;
-  playbackSpeed = Number(config.playbackSpeed || 1.12);
+  playbackSpeed = Number(config.playbackSpeed || 1.0);
 }
 
 async function createSession() {
@@ -154,8 +154,9 @@ function connectRealtime(session) {
         instructions: session.instructions,
         turn_detection: {
           type: "server_vad",
-          silence_duration_ms: 900,
-          prefix_padding_ms: 333,
+          threshold: 0.5,
+          silence_duration_ms: 200,
+          prefix_padding_ms: 300,
         },
         audio: {
           input: { format: { type: "audio/pcm", rate: SAMPLE_RATE } },
@@ -283,20 +284,20 @@ async function startMicrophone() {
   });
 
   captureContext = new AudioContext({ sampleRate: SAMPLE_RATE });
+  await captureContext.audioWorklet.addModule("/static/pcm-worklet.js");
   source = captureContext.createMediaStreamSource(mediaStream);
-  processor = captureContext.createScriptProcessor(4096, 1, 1);
+  workletNode = new AudioWorkletNode(captureContext, "pcm-capture");
 
-  processor.onaudioprocess = (event) => {
+  workletNode.port.onmessage = (event) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) return;
-    const input = event.inputBuffer.getChannelData(0);
     socket.send(JSON.stringify({
       type: "input_audio_buffer.append",
-      audio: bytesToBase64(floatToPcm16(input)),
+      audio: bytesToBase64(floatToPcm16(event.data)),
     }));
   };
 
-  source.connect(processor);
-  processor.connect(captureContext.destination);
+  source.connect(workletNode);
+  workletNode.connect(captureContext.destination);
   micState.textContent = "On";
 }
 
@@ -305,12 +306,13 @@ async function startSession() {
   speakButton.disabled = true;
 
   try {
+    const micPromise = startMicrophone();
     const session = await createSession();
     voiceName.textContent = session.voice;
     modelName.textContent = session.model;
-    playbackSpeed = Number(session.playbackSpeed || 1.12);
+    playbackSpeed = Number(session.playbackSpeed || 1.0);
     connectRealtime(session);
-    await startMicrophone();
+    await micPromise;
 
     isRecording = true;
     speakButton.classList.add("recording");
@@ -331,10 +333,10 @@ function stopSession(closeSocket = true) {
   speakButton.disabled = false;
   micState.textContent = "Off";
 
-  if (processor) {
-    processor.disconnect();
-    processor.onaudioprocess = null;
-    processor = null;
+  if (workletNode) {
+    workletNode.port.onmessage = null;
+    workletNode.disconnect();
+    workletNode = null;
   }
   if (source) {
     source.disconnect();
