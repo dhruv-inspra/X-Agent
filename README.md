@@ -18,3 +18,7 @@ py -m uvicorn app:app --host 127.0.0.1 --port 8010 --reload
 ```
 
 4. Open `http://127.0.0.1:8010`.
+
+## Vercel
+
+Set `XAI_API_KEY` in the Vercel project environment variables before using the deployed app.
