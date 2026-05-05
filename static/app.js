@@ -193,8 +193,23 @@ function handleRealtimeEvent(event) {
     return;
   }
 
-  if ((event.type === "response.text.delta" || event.type === "response.output_text.delta") && event.delta) {
+  if (
+    (
+      event.type === "response.text.delta"
+      || event.type === "response.output_text.delta"
+      || event.type === "response.output_audio_transcript.delta"
+    )
+    && event.delta
+  ) {
     addAgentDelta(event.delta);
+    return;
+  }
+
+  if (event.type === "response.output_audio_transcript.done" && event.transcript) {
+    if (!activeAgentMessage) {
+      appendMessage("agent", event.transcript);
+    }
+    finalizeAgentMessage();
     return;
   }
 
