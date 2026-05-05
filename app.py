@@ -45,7 +45,7 @@ async def session() -> dict:
     if not api_key:
         raise HTTPException(
             status_code=500,
-            detail="Set XAI_API_KEY in .env before starting a voice session.",
+            detail="Set XAI_API_KEY in your local .env file or hosting environment variables before starting a voice session.",
         )
 
     try:
