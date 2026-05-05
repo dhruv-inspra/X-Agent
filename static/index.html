@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>xAI Voice Agent Console</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar" aria-label="Voice agent controls">
+        <div>
+          <p class="eyebrow">Inspra AI voice agent</p>
+          <h1>Live voice console</h1>
+        </div>
+        <div class="status-pill" id="status">Idle</div>
+      </section>
+
+      <section class="control-band">
+        <button class="speak-button" id="speakButton" type="button">
+          <span id="buttonText">Speak now</span>
+        </button>
+        <div class="meta-grid">
+          <div>
+            <span>Model</span>
+            <strong id="modelName">Loading</strong>
+          </div>
+          <div>
+            <span>Voice</span>
+            <strong id="voiceName">Loading</strong>
+          </div>
+          <div>
+            <span>Mic</span>
+            <strong id="micState">Off</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="transcript-layout" aria-label="Live transcript">
+        <article>
+          <div class="section-title">
+            <h2>Conversation</h2>
+            <button id="clearButton" class="ghost-button" type="button">Clear</button>
+          </div>
+          <div class="transcript" id="transcript"></div>
+        </article>
+        <aside>
+          <h2>Session events</h2>
+          <div class="events" id="events"></div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/static/app.js" type="module"></script>
+  </body>
+</html>
